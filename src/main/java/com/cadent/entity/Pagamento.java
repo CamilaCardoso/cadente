@@ -1,10 +1,14 @@
 package com.cadent.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -19,12 +23,18 @@ public class Pagamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ALTERAÇÃO: Permite receber o agendamento no JSON da requisição (Write-Only) sem gerar loop infinito no retorno
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotNull(message = "Agendamento é obrigatório")
     @ManyToOne(optional = false)
     @JoinColumn(name = "agendamento_id", nullable = false)
     private Agendamento agendamento;
 
     private LocalDateTime dataPagamento;
 
+    @Positive(message = "Valor deve ser maior que zero")
+    @DecimalMin(value = "0.01", message = "Valor mínimo é R$ 0.01")
+    @Column(nullable = false)
     private BigDecimal valorTotal;
 
     @Enumerated(EnumType.STRING)
@@ -45,5 +55,15 @@ public class Pagamento {
         PENDENTE,
         PAGO,
         CANCELADO
+    }
+
+    @Override
+    public String toString() {
+        return "Pagamento{" +
+                "id=" + id +
+                ", valorTotal=" + valorTotal +
+                ", status=" + status +
+                ", metodo=" + metodo +
+                '}';
     }
 }

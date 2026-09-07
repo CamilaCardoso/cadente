@@ -4,6 +4,22 @@ Este documento descreve todas as validações implementadas no sistema Cadent pa
 
 ---
 
+## 🔄 Fluxo Completo
+
+Siga esta sequência lógica para testar o sistema do zero, respeitando as integridades referenciais e relacionamentos do banco de dados:
+
+1. **POST** `/api/pacientes` - Crie o paciente base para a consulta
+2. **POST** `/api/dentistas` - Crie o dentista responsável pelo atendimento
+3. **POST** `/api/procedimentos` - Cadastre os procedimentos no catálogo (ex: Limpeza, Restauração)
+4. **POST** `/api/agendamentos` - Crie o agendamento vinculando `paciente_id`, `dentista_id` e a lista de `procedimentos` (tabela de junção)
+5. **POST** `/api/pagamentos` - Registre a quitação/pagamento financeiro atrelado ao `agendamento_id`
+6. **GET** `/api/agendamentos/paciente/1` - Consulte o histórico do paciente confirmando se trouxe dados, procedimentos e pagamentos
+7. **GET** `/api/pagamentos/agendamento/1` - Verifique os detalhes do pagamento gerado para a consulta
+8. **PUT** `/api/agendamentos/1` - Atualize o status da consulta (ex: de `AGENDADO` para `REALIZADO`) ou observações
+9. **DELETE** `/api/pagamentos/1` ou **DELETE** `/api/agendamentos/1` - Remova/cancele registros para testar a remoção em cascata (opcional)
+
+---
+
 ## 📋 Validações por Entidade
 
 ### 👥 Paciente
@@ -61,12 +77,43 @@ Este documento descreve todas as validações implementadas no sistema Cadent pa
 | **Dentista** | Deve existir no BD | ✅ Sim |
 | **Data/Hora** | Data válida | ✅ Sim |
 | **Status** | AGENDADO, REALIZADO, CANCELADO | ✅ Sim |
+| **Procedimentos** | Lista/Set de IDs de procedimentos existentes | ❌ Não (opcional) |
 | **Observações** | Texto livre | ❌ Não |
 
 #### Regras de Data:
 - ✅ Deve ser uma data válida
 - ✅ Deve estar no futuro (recomendado)
 - ✅ Status deve ser um dos valores permitidos
+
+---
+
+### 💊 Procedimento
+
+| Campo | Validação | Exemplo Válido | Exemplo Inválido |
+|-------|-----------|-----------------|------------------|
+| **Nome** | Obrigatório, Único | "Limpeza Dental" | "" (vazio) |
+| **Valor Padrão** | Obrigatório, Maior que zero | 150.00 | 0.00 ou -10.00 |
+| **Descrição** | Opcional | "Limpeza completa com ultrassom" | — |
+
+#### Regras de Procedimento:
+- ✅ **Nome único:** Não é permitido cadastrar dois procedimentos com o mesmo nome (validação *case-insensitive*).
+- ✅ **Valor mínimo:** O valor deve ser estritamente maior que zero (`@Positive` e `@DecimalMin("0.01")`).
+
+---
+
+### 💰 Pagamento
+
+| Campo | Validação | Exemplo Válido | Exemplo Inválido |
+|-------|-----------|-----------------|------------------|
+| **Agendamento** | Obrigatório, ID existente no BD | `{"id": 1}` | `null` |
+| **Valor Total** | Obrigatório, Mínimo R$ 0.01 | 150.00 | 0.00 |
+| **Método** | DINHEIRO, DEBITO, CREDITO, PIX | "PIX" | "CHEQUE" |
+| **Status** | PENDENTE, PAGO, CANCELADO | "PAGO" | "INVALIDO" |
+
+#### Regras de Pagamento:
+- ✅ **Unicidade de Pagamento por Agendamento:** Não é permitido criar mais de um registro de pagamento para o mesmo `agendamento_id`.
+- ✅ **Serialização `@JsonProperty`:** O campo `agendamento` aceita o envio via JSON na criação (`WRITE_ONLY`), evitando erros de validação sem causar ciclos de serialização.
+- ✅ **Valor Positivo:** O valor do pagamento não pode ser negativo nem zerado.
 
 ---
 

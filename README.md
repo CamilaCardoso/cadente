@@ -43,9 +43,9 @@ O projeto combina **funcionalidade robusta** com **segurança e validações pro
 ### ⭐ Destaques
 
 ✅ **Validações Profissionais** - CPF, Email, CRM validados  
-✅ **Tratamento de Erros** - Mensagens claras e estruturadas  
-✅ **Status HTTP Corretos** - 201, 400, 404, 409, 500  
-✅ **API Pronta para Produção** - Segura e confiável  
+✅ **Gerenciamento de Entidades JPA** - Tratamento de entidades acopladas e desacopladas no salvamento  
+✅ **Tratamento de Erros** - Mensagens claras e estruturadas via Exception Handler Central
+✅ **Status HTTP Corretos** - 201, 400, 404, 409, 500   
 
 ---
 
@@ -76,9 +76,10 @@ O projeto combina **funcionalidade robusta** com **segurança e validações pro
   - Histórico de uso
 
 - **💰 Pagamentos**
-  - Múltiplos métodos (Dinheiro, Débito, Crédito, PIX)
-  - Status de pagamento (Pendente, Pago, Cancelado)
+  - Múltiplos métodos (`DINHEIRO`, `DEBITO`, `CREDITO`, `PIX`)
+  - Status financeiro (`PENDENTE`, `PAGO`, `CANCELADO`)
   - Vinculado a agendamentos
+  - Métricas com totais de pagamentos pagos e pendentes
 
 ### Technical Features
 
@@ -166,6 +167,8 @@ cadent/
 │   │   ├── PacienteController.java
 │   │   ├── DentistaController.java
 │   │   └── AgendamentoController.java
+│   │   └── PagamentoController.java
+│   │   └── ProcedimentoController.java
 │   │
 │   ├── dto/
 │   │   └── ErrorResponse.java
@@ -222,6 +225,16 @@ cadent/
 | PUT | `/api/dentistas/{id}` | Atualizar | 200, 400, 404 |
 | DELETE | `/api/dentistas/{id}` | Deletar | 204, 404 |
 
+### Procedimento
+
+| Método | Endpoint | Descrição | Status Esperado |
+|--------|----------|-----------|-----------------|
+| GET | `/api/procedimentos` | Lista todos | 200 |
+| GET | `/api/procedimentos/{id}` | Busca por ID | 200, 404 |
+| POST | `/api/procedimentos` | Criar novo | 201, 400, 409 |
+| PUT | `/api/procedimentos/{id}` | Atualizar | 200, 400, 404 |
+| DELETE | `/api/procedimentos/{id}` | Deletar | 204, 404 |
+
 ### Agendamentos
 
 | Método | Endpoint | Descrição |
@@ -234,8 +247,22 @@ cadent/
 | PUT | `/api/agendamentos/{id}` | Atualizar |
 | DELETE | `/api/agendamentos/{id}` | Cancelar |
 
----
+### Pagamento
 
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/pagamentos` | Lista todos |
+| GET | `/api/pagamentos/{id}` | Busca por ID |
+| GET | `/api/pagamentos/agendamento/{id}` | Por agendamento |
+| GET | `/api/pagamentos/status/{status}` | Por status (PENDENTE, PAGO, CANCELADO) |
+| GET | `/api/pagamentos/stats/total-pago` | Total de pagamentos realizados |
+| GET | `/api/pagamentos/stats/total-pendente` | Total de pagamentos pendentes |
+| POST | `/api/pagamentos` | Criar novo |
+| PUT | `/api/pagamentos/{id}` | Atualizar |
+| DELETE | `/api/pagamentos/{id}` | Cancelar |
+
+---
+🛡️ Validações
 ### Paciente
 
 | Campo | Validação | Exemplo Válido | Exemplo Inválido |

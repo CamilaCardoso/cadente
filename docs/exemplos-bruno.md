@@ -352,17 +352,72 @@ A API estará disponível em: `http://localhost:8080`
 
 ---
 
+## 📅 Exemplos com Pagamentos
+
+### Criar Pagamento
+
+**Método:** `POST`  
+**URL:** `http://localhost:8080/api/pagamentos`
+
+#### Request (Body):
+```json
+{
+"agendamento": {
+  "id": 1
+   },
+    "dataPagamento": "2026-09-07T14:30:00",
+    "valorTotal": 150.00,
+    "metodo": "DINHEIRO",
+    "status": "PENDENTE"
+}
+```
+
+#### Response (201 Created):
+```json
+{
+  "id": 1,
+  "dataPagamento": "2026-09-07T14:30:00",
+  "valorTotal": 150.00,
+  "metodo": "DINHEIRO",
+  "status": "PENDENTE"
+}
+```
+
+✅ **Status esperado:** `201 Created`
+
+---
+
+### Listar Pagamento por Id de Agendamento
+
+**Método:** `GET`  
+**URL:** `http://localhost:8080/api/pagamentos/agendamento/1`
+
+#### Response (200 OK):
+```json
+{
+  "id": 1,
+  "dataPagamento": "2026-09-10T15:00:00",
+  "valorTotal": 350.00,
+  "metodo": "PIX",
+  "status": "PAGO"
+}
+```
+
+---
+
 ## 🔄 Fluxo Completo
 
-Siga esta sequência para testar o sistema completo:
+Siga esta sequência lógica para testar o sistema do zero, respeitando as integridades referenciais e relacionamentos do banco de dados:
 
-1. **POST** `/api/pacientes` - Crie um paciente
-2. **POST** `/api/dentistas` - Crie um dentista
-3. **POST** `/api/agendamentos` - Agende uma consulta
-4. **GET** `/api/pacientes` - Verifique os pacientes
-5. **GET** `/api/agendamentos/paciente/1` - Veja agendamentos do paciente
-6. **PUT** `/api/pacientes/1` - Atualize dados
-7. **DELETE** `/api/pacientes/1` - Delete (opcional)
+1. **POST** `/api/pacientes` - Crie o paciente base para a consulta
+2. **POST** `/api/dentistas` - Crie o dentista responsável pelo atendimento
+3. **POST** `/api/procedimentos` - Cadastre os procedimentos no catálogo (ex: Limpeza, Restauração)
+4. **POST** `/api/agendamentos` - Crie o agendamento vinculando `paciente_id`, `dentista_id` e a lista de `procedimentos` (tabela de junção)
+5. **POST** `/api/pagamentos` - Registre a quitação/pagamento financeiro atrelado ao `agendamento_id`
+6. **GET** `/api/agendamentos/paciente/1` - Consulte o histórico do paciente confirmando se trouxe dados, procedimentos e pagamentos
+7. **GET** `/api/pagamentos/agendamento/1` - Verifique os detalhes do pagamento gerado para a consulta
+8. **PUT** `/api/agendamentos/1` - Atualize o status da consulta (ex: de `AGENDADO` para `REALIZADO`) ou observações
+9. **DELETE** `/api/pagamentos/1` ou **DELETE** `/api/agendamentos/1` - Remova/cancele registros para testar a remoção em cascata (opcional)
 
 ---
 

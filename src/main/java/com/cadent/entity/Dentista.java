@@ -31,6 +31,9 @@ public class Dentista {
 
     private String telefone;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "dentista", cascade = CascadeType.ALL, orphanRemoval = true)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private List<Agendamento> agendamentos;
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "agendamento")
@@ -23,11 +23,15 @@ public class Agendamento {
     @NotNull(message = "Paciente é obrigatório")
     @ManyToOne(optional = false)
     @JoinColumn(name = "paciente_id", nullable = false)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private Paciente paciente;
 
     @NotNull(message = "Dentista é obrigatório")
     @ManyToOne(optional = false)
     @JoinColumn(name = "dentista_id", nullable = false)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private Dentista dentista;
 
     @NotNull(message = "Data e hora são obrigatórias")
@@ -46,10 +50,14 @@ public class Agendamento {
             joinColumns = @JoinColumn(name = "agendamento_id"),
             inverseJoinColumns = @JoinColumn(name = "procedimento_id")
     )
-    private List<Procedimento> procedimentos;
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
+    private Set<Procedimento> procedimentos;
 
     @OneToMany(mappedBy = "agendamento", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Pagamento> pagamentos;
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
+    private Set<Pagamento> pagamentos;
 
     public enum StatusAgendamento {
         AGENDADO,
