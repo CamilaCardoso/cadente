@@ -17,6 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.Builder
 public class Paciente {
 
     @Id

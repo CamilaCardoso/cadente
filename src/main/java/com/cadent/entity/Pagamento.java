@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.Builder
 public class Pagamento {
 
     @Id

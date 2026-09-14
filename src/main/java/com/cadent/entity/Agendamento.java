@@ -14,6 +14,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.Builder
 public class Agendamento {
 
     @Id
