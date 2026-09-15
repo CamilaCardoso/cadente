@@ -9,7 +9,7 @@ API REST robusta e bem documentada para gerenciar pacientes, dentistas, agendame
 [![Maven](https://img.shields.io/badge/Maven-3.8%2B-C71A36?style=flat-square&logo=apache-maven)](https://maven.apache.org/)
 [![H2 Database](https://img.shields.io/badge/Database-H2-yellow?style=flat-square&logo=h2-database)](https://www.h2database.com/)
 [![REST API](https://img.shields.io/badge/API-REST-FF6B6B?style=flat-square)](https://restfulapi.net/)
-[![Validações](https://img.shields.io/badge/Validações-Completas-green?style=flat-square)](https://github.com/seu-usuario/cadent#validações)
+[![Validações](https://img.shields.io/badge/Validações-Completas-green?style=flat-square)](https://github.com/CamilaCardoso/cadent#validações)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
