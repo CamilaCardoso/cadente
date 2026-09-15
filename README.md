@@ -410,21 +410,21 @@ Credenciais padrão (pré-preenchidas):
 - [x] H2 Database
 - [x] Endpoints REST profissionais
 
-### v1.1 (Próximo - 2 semanas)
+### v1.1
 
-- [ ] Testes unitários (JUnit 5)
-- [ ] Testes de integração
-- [ ] Refinar queries SQL
-- [ ] Adicionar paginação
+- [x] **Testes Unitários:** Validação das regras de domínio e métodos isolados
+- [x] **Testes de Integração:** Suíte automatizada com Spring Boot Test + H2 em memória (`application-test.properties`)
+- [x] **Persistência Relacional com PostgreSQL:** Transição do H2 para PostgreSQL no ambiente de desenvolvimento local
+- [x] **Isolamento de Ambientes:** Separação entre runtime (PostgreSQL) e suíte de testes (H2)
 
-### v2.0 (1-2 meses)
+### v2.0
 
 - [ ] Frontend em React/Vue
 - [ ] Autenticação JWT
 - [ ] Swagger/OpenAPI
 - [ ] Relatórios PDF
 
-### v3.0 (Futuro)
+### v3.0
 
 - [ ] PostgreSQL em produção
 - [ ] Docker containerization
