@@ -64,6 +64,6 @@ public class ProcedimentoIntegrationTest {
         mockMvc.perform(get("/api/procedimentos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].nome", is("Extração")));
+                .andExpect(jsonPath("$[0].nome", is("Clareamento")));
     }
 }

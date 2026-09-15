@@ -1,80 +1,152 @@
-package com.cadent.integration;
+package com.cadent.controller;
 
+import com.cadent.BaseIntegrationTest;
 import com.cadent.entity.Paciente;
 import com.cadent.repository.PacienteRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@SpringBootTest // Sobe todo o contexto da aplicação do Spring
-@AutoConfigureMockMvc // Configura o MockMvc para simular requisições HTTP
-public class PacienteIntegrationTest {
+@DisplayName("Paciente Controller - Testes de Integração")
+class PacienteControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc; // Ferramenta que simula as requisições (como se fosse um Postman)
+    private PacienteRepository pacienteRepository;
 
     @Autowired
-    private PacienteRepository pacienteRepository; // Repositório real conectado ao banco de dados H2 (em memória)
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private ObjectMapper objectMapper; // Transforma objetos Java em JSON e vice-versa
+    private Paciente pacienteTeste;
 
     @BeforeEach
     void setUp() {
-        // Limpa o banco de dados antes de cada teste para garantir que um teste não interfira no outro
         pacienteRepository.deleteAll();
+        
+        pacienteTeste = new Paciente();
+        pacienteTeste.setNome("João Silva");
+        pacienteTeste.setCpf("12345678909");
+        pacienteTeste.setEmail("joao@example.com");
+        pacienteTeste.setTelefone("11999999999");
     }
 
     @Test
-    void deveCriarPacienteERetornarStatusCreated() throws Exception {
-        // Cenário (Given) - Criamos um objeto Paciente que queremos salvar
-        Paciente novoPaciente = Paciente.builder()
-                .nome("Carlos Silva")
-                .cpf("123.456.789-00")
-                .telefone("(11) 98765-4321")
-                .dataNascimento(LocalDate.of(1990, 5, 20))
-                .endereco("Rua das Flores, 123")
-                .build();
+    @DisplayName("Deve criar paciente com dados válidos")
+    void testCriarPacienteComSucesso() throws Exception {
+        String jsonRequest = objectMapper.writeValueAsString(pacienteTeste);
 
-        String pacienteJson = objectMapper.writeValueAsString(novoPaciente);
-
-        // Ação (When) & Validação (Then) - Fazemos a requisição POST e esperamos o status 201 Created
         mockMvc.perform(post("/api/pacientes")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(pacienteJson))
+                .content(jsonRequest))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nome", is("Carlos Silva")))
-                .andExpect(jsonPath("$.cpf", is("123.456.789-00")));
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.nome").value("João Silva"))
+                .andExpect(jsonPath("$.email").value("joao@example.com"));
     }
 
     @Test
-    void deveListarTodosOsPacientesSalvosNoBanco() throws Exception {
-        // Cenário (Given) - Salvamos manualmente 2 pacientes no banco de dados real
-        Paciente p1 = Paciente.builder().nome("Ana Maria").cpf("111.111.111-11").telefone("11999999999").dataNascimento(LocalDate.of(1985, 10, 15)).endereco("Rua A").build();
-        Paciente p2 = Paciente.builder().nome("João Pedro").cpf("222.222.222-22").telefone("11888888888").dataNascimento(LocalDate.of(1992, 2, 10)).endereco("Rua B").build();
-        pacienteRepository.save(p1);
-        pacienteRepository.save(p2);
+    @DisplayName("Deve rejeitar paciente com CPF duplicado")
+    void testCriarPacienteCPFDuplicado() throws Exception {
+        // Primeiro paciente
+        pacienteRepository.save(pacienteTeste);
 
-        // Ação (When) & Validação (Then) - Fazemos um GET e verificamos se retornam 2 registros e se os nomes batem
-        mockMvc.perform(get("/api/pacientes"))
+        // Tentativa de criar outro com mesmo CPF
+        Paciente duplicado = new Paciente();
+        duplicado.setNome("Outro Nome");
+        duplicado.setCpf("12345678909");
+        duplicado.setEmail("outro@example.com");
+        duplicado.setTelefone("11888888888");
+
+        String jsonRequest = objectMapper.writeValueAsString(duplicado);
+
+        mockMvc.perform(post("/api/pacientes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensagem", is("Recurso já existe")));
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar paciente com email inválido")
+    void testCriarPacienteEmailInvalido() throws Exception {
+        pacienteTeste.setEmail("email-invalido");
+
+        String jsonRequest = objectMapper.writeValueAsString(pacienteTeste);
+
+        mockMvc.perform(post("/api/pacientes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erros.email").exists());
+    }
+
+    @Test
+    @DisplayName("Deve listar todos os pacientes")
+    void testListarTodosPacientes() throws Exception {
+        pacienteRepository.save(pacienteTeste);
+
+        mockMvc.perform(get("/api/pacientes")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].nome", is("Ana Maria")))
-                .andExpect(jsonPath("$[1].nome", is("João Pedro")));
+                .andExpect(jsonPath("$", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$[0].nome").value("João Silva"));
+    }
+
+    @Test
+    @DisplayName("Deve buscar paciente por ID")
+    void testBuscarPacientePorId() throws Exception {
+        Paciente salvo = pacienteRepository.save(pacienteTeste);
+
+        mockMvc.perform(get("/api/pacientes/{id}", salvo.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(salvo.getId()))
+                .andExpect(jsonPath("$.nome").value("João Silva"));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 para paciente inexistente")
+    void testBuscarPacienteInexistente() throws Exception {
+        mockMvc.perform(get("/api/pacientes/{id}", 999)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Deve atualizar paciente")
+    void testAtualizarPaciente() throws Exception {
+        Paciente salvo = pacienteRepository.save(pacienteTeste);
+
+        Paciente atualizado = new Paciente();
+        atualizado.setNome("João Silva Atualizado");
+        atualizado.setCpf(salvo.getCpf());
+        atualizado.setEmail("joao.novo@example.com");
+        atualizado.setTelefone("11988888888");
+
+        String jsonRequest = objectMapper.writeValueAsString(atualizado);
+
+        mockMvc.perform(put("/api/pacientes/{id}", salvo.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("João Silva Atualizado"));
+    }
+
+    @Test
+    @DisplayName("Deve deletar paciente")
+    void testDeletarPaciente() throws Exception {
+        Paciente salvo = pacienteRepository.save(pacienteTeste);
+
+        mockMvc.perform(delete("/api/pacientes/{id}", salvo.getId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/pacientes/{id}", salvo.getId()))
+                .andExpect(status().isNotFound());
     }
 }
-
