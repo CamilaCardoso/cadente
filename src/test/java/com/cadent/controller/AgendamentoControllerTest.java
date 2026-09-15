@@ -68,7 +68,7 @@ class AgendamentoControllerTest {
         agendamento.setId(1L);
         agendamento.setPaciente(paciente);
         agendamento.setDentista(dentista);
-        agendamento.setProcedimentos(Set.of(procedimento));
+        agendamento.setProcedimentos(List.of(procedimento));
         agendamento.setDataHora(LocalDateTime.now().plusDays(1));
         agendamento.setStatus(Agendamento.StatusAgendamento.AGENDADO);
         agendamento.setObservacoes("Primeira consulta");
@@ -158,7 +158,7 @@ class AgendamentoControllerTest {
         Agendamento atualizado = new Agendamento();
         atualizado.setStatus(Agendamento.StatusAgendamento.REALIZADO);
         atualizado.setObservacoes("Consulta realizada com sucesso");
-        atualizado.setProcedimentos(Set.of(procedimento));
+        atualizado.setProcedimentos(List.of(procedimento));
 
         when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
         when(procedimentoRepository.findById(1L)).thenReturn(Optional.of(procedimento));

@@ -3,7 +3,7 @@ package com.cadent.controller;
 import com.cadent.entity.Dentista;
 import com.cadent.exception.DuplicateResourceException;
 import com.cadent.exception.ResourceNotFoundException;
-import com.cadent.repository.DentistaRepository;
+import com.cadent.service.DentistaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,7 +24,7 @@ import static org.mockito.Mockito.*;
 class DentistaControllerTest {
 
     @Mock
-    private DentistaRepository dentistaRepository;
+    private DentistaService dentistaService;
 
     @InjectMocks
     private DentistaController dentistaController;
@@ -46,7 +45,7 @@ class DentistaControllerTest {
     @Test
     @DisplayName("Deve listar todos os dentistas com sucesso")
     void testListarTodos() {
-        when(dentistaRepository.findAll()).thenReturn(List.of(dentista));
+        when(dentistaService.listarTodos()).thenReturn(List.of(dentista));
 
         ResponseEntity<List<Dentista>> response = dentistaController.listarTodos();
 
@@ -59,7 +58,7 @@ class DentistaControllerTest {
     @Test
     @DisplayName("Deve buscar dentista por ID com sucesso")
     void testBuscarPorIdSucesso() {
-        when(dentistaRepository.findById(1L)).thenReturn(Optional.of(dentista));
+        when(dentistaService.buscarPorId(1L)).thenReturn(dentista);
 
         ResponseEntity<Dentista> response = dentistaController.buscarPorId(1L);
 
@@ -70,7 +69,8 @@ class DentistaControllerTest {
     @Test
     @DisplayName("Deve lançar ResourceNotFoundException ao buscar ID inexistente")
     void testBuscarPorIdNaoEncontrado() {
-        when(dentistaRepository.findById(99L)).thenReturn(Optional.empty());
+        when(dentistaService.buscarPorId(99L))
+                .thenThrow(new ResourceNotFoundException("Dentista com ID 99 não encontrado"));
 
         assertThrows(ResourceNotFoundException.class, () -> dentistaController.buscarPorId(99L));
     }
@@ -78,8 +78,7 @@ class DentistaControllerTest {
     @Test
     @DisplayName("Deve criar dentista com sucesso")
     void testCriarSucesso() {
-        when(dentistaRepository.findByCrm(dentista.getCrm())).thenReturn(Optional.empty());
-        when(dentistaRepository.save(any(Dentista.class))).thenReturn(dentista);
+        when(dentistaService.salvar(any(Dentista.class))).thenReturn(dentista);
 
         ResponseEntity<Dentista> response = dentistaController.criar(dentista);
 
@@ -90,10 +89,10 @@ class DentistaControllerTest {
     @Test
     @DisplayName("Deve lançar DuplicateResourceException ao criar dentista com CRM duplicado")
     void testCriarCrmDuplicado() {
-        when(dentistaRepository.findByCrm(dentista.getCrm())).thenReturn(Optional.of(dentista));
+        when(dentistaService.salvar(any(Dentista.class)))
+                .thenThrow(new DuplicateResourceException("CRM SP-12345 já cadastrado"));
 
         assertThrows(DuplicateResourceException.class, () -> dentistaController.criar(dentista));
-        verify(dentistaRepository, never()).save(any(Dentista.class));
     }
 
     @Test
@@ -106,8 +105,7 @@ class DentistaControllerTest {
                 .telefone("11977776666")
                 .build();
 
-        when(dentistaRepository.findById(1L)).thenReturn(Optional.of(dentista));
-        when(dentistaRepository.save(any(Dentista.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(dentistaService.atualizar(eq(1L), any(Dentista.class))).thenReturn(dentistaAtualizado);
 
         ResponseEntity<Dentista> response = dentistaController.atualizar(1L, dentistaAtualizado);
 
@@ -119,13 +117,11 @@ class DentistaControllerTest {
     @Test
     @DisplayName("Deve deletar dentista com sucesso")
     void testDeletarSucesso() {
-        when(dentistaRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(dentistaRepository).deleteById(1L);
+        doNothing().when(dentistaService).deletar(1L);
 
         ResponseEntity<Void> response = dentistaController.deletar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(dentistaRepository, times(1)).deleteById(1L);
+        verify(dentistaService, times(1)).deletar(1L);
     }
 }
-

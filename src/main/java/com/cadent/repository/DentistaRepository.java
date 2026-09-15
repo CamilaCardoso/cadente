@@ -8,5 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface DentistaRepository extends JpaRepository<Dentista, Long> {
+
+    boolean existsByCrm(String crm);
+
     Optional<Dentista> findByCrm(String crm);
+
 }
